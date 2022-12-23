@@ -1,25 +1,26 @@
 {
-	"id": "your-module-name",
-	"name": "your-module-name",
-	"shortname": "module-shortname",
-	"description": "A short one line description of your module",
-	"version": "0.0.0",
+	"id": "soundtrack-remote",
+	"name": "soundtrack-remote",
+	"shortname": "soundtrack",
+	"description": "Control Soundtrack Your Brand",
+	"version": "0.1.0",
 	"license": "MIT",
-	"repository": "git+https://github.com/bitfocus/companion-module-your-module-name.git",
-	"bugs": "https://github.com/bitfocus/companion-module-your-module-name/issues",
+	"repository": "git+https://github.com/bitfocus/companion-module-soundtrack-remote.git",
+	"bugs": "https://github.com/bitfocus/companion-module-soundtrack-remote/issues",
 	"maintainers": [
 		{
-			"name": "Your name",
-			"email": "Your email"
+			"name": "Elliot Matson",
+			"email": "ematson5897@gmail.com"
 		}
 	],
+	"legacyIds": [],
 	"runtime": {
-		"type": "node14",
-		"api": "node-ipc",
+		"type": "node18",
+		"api": "nodejs-ipc",
 		"apiVersion": "0.0.0",
 		"entrypoint": "../main.js"
 	},
-	"manufacturer": "Your company",
-	"products": ["Your product"],
-	"keywords": []
+	"manufacturer": "Soundtrack Your Brand",
+	"products": ["Remote"],
+	"keywords": ["Soundtrack", "Music", "Spotify"]
 }

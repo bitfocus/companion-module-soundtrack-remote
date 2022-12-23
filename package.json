@@ -1,20 +1,21 @@
 {
-	"name": "your-module-name",
+	"name": "soundtrack-remote",
 	"version": "0.1.0",
 	"main": "main.js",
 	"scripts": {
-		"format": "prettier -w ."
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"lint:raw": "eslint --ext .ts --ext .js --ignore-pattern dist --ignore-pattern pkg",
+		"lint": "yarn lint:raw ."
 	},
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/bitfocus/companion-module-your-module-name.git"
+		"url": "git+https://github.com/bitfocus/companion-module-soundtrack-remote.git"
 	},
 	"dependencies": {
 		"@companion-module/base": "~0.5.1"
 	},
 	"devDependencies": {
 		"@companion-module/tools": "^0.3.3"
-	},
-	"prettier": "@companion-module/tools/.prettierrc.json"
+	}
 }
