@@ -1,51 +1,64 @@
-const { InstanceBase, Regex, runEntrypoint, InstanceStatus } = require('@companion-module/base')
-const UpgradeScripts = require('./upgrades')
-const UpdateActions = require('./actions')
+const {
+  InstanceBase,
+  Regex,
+  runEntrypoint,
+  InstanceStatus,
+} = require("@companion-module/base");
+const { GraphQLClient } = require("graphql-request");
+const UpgradeScripts = require("./upgrades");
+const UpdateActions = require("./actions");
 
 class ModuleInstance extends InstanceBase {
-	constructor(internal) {
-		super(internal)
-	}
+  constructor(internal) {
+    super(internal);
+  }
 
-	async init(config) {
-		this.config = config
+  async init(config) {
+    this.config = config;
 
-		this.updateStatus(InstanceStatus.Ok)
+    const soundtrackURL = "https://api.soundtrackyourbrand.com/v2";
+    if (this.config.api_key) {
+      this.api_key = this.config.api_key;
+      this.client = new GraphQLClient(soundtrackURL, {
+        headers: { authorization: `Basic ${this.api_key}` },
+      });
+    }
 
-		this.updateActions() // export actions
-	}
-	// When module gets deleted
-	async destroy() {
-		this.log('debug', 'destroy')
-	}
+    this.updateStatus(InstanceStatus.Ok);
 
-	async configUpdated(config) {
-		this.config = config
-	}
+    this.updateActions(); // export actions
+  }
+  // When module gets deleted
+  async destroy() {
+    this.log("debug", "destroy");
+  }
 
-	// Return config fields for web config
-	getConfigFields() {
-		return [
-			{
-				type: 'textinput',
-				id: 'host',
-				label: 'Target IP',
-				width: 8,
-				regex: Regex.IP,
-			},
-			{
-				type: 'textinput',
-				id: 'port',
-				label: 'Target Port',
-				width: 4,
-				regex: Regex.PORT,
-			},
-		]
-	}
+  async configUpdated(config) {
+    this.config = config;
+  }
 
-	updateActions() {
-		UpdateActions(this)
-	}
+  // Return config fields for web config
+  getConfigFields() {
+    return [
+      {
+        type: "textinput",
+        id: "api_key",
+        label: "API Key",
+      },
+      {
+        type: "textinput",
+        id: "zone_id",
+        label: "Zone ID",
+      },
+    ];
+  }
+
+  // Function to skip a song using the Soundtrack Your Brand API
+  async skipSong() {}
+
+  updateActions() {
+    UpdateActions(this);
+  }
 }
 
-runEntrypoint(ModuleInstance, UpgradeScripts)
+runEntrypoint(ModuleInstance, UpgradeScripts);

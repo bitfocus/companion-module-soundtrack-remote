@@ -13,9 +13,12 @@
 		"url": "git+https://github.com/bitfocus/companion-module-soundtrack-remote.git"
 	},
 	"dependencies": {
-		"@companion-module/base": "~0.5.1"
+		"@companion-module/base": "~1.0.0",
+		"graphql": "^16.0.0",
+		"graphql-request": "^5.0.0"
 	},
 	"devDependencies": {
-		"@companion-module/tools": "^0.3.3"
+		"@companion-module/tools": "^0.5.1",
+		"typescript": ">=2.8.0"
 	}
 }
