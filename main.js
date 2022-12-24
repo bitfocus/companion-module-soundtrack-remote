@@ -1,6 +1,5 @@
 const {
   InstanceBase,
-  Regex,
   runEntrypoint,
   InstanceStatus,
 } = require("@companion-module/base");
