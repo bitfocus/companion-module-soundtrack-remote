@@ -21,9 +21,8 @@ class ModuleInstance extends InstanceBase {
       this.client = new GraphQLClient(soundtrackURL, {
         headers: { authorization: `Basic ${this.api_key}` },
       });
+      this.updateStatus(InstanceStatus.Ok);
     }
-
-    this.updateStatus(InstanceStatus.Ok);
 
     this.updateActions(); // export actions
   }
@@ -33,7 +32,7 @@ class ModuleInstance extends InstanceBase {
   }
 
   async configUpdated(config) {
-    this.config = config;
+    this.init(config);
   }
 
   // Return config fields for web config
@@ -51,9 +50,6 @@ class ModuleInstance extends InstanceBase {
       },
     ];
   }
-
-  // Function to skip a song using the Soundtrack Your Brand API
-  async skipSong() {}
 
   updateActions() {
     UpdateActions(this);
