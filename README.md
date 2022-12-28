@@ -1,4 +1,4 @@
-# companion-module-[replace with module name]
+# companion-module-soundtrack-remote
 See [HELP.md](./HELP.md) and [LICENSE](./LICENSE)
 
 Controls Soundtrack Your Brand via [their API](https://studio.apollographql.com/public/soundtrack/)
