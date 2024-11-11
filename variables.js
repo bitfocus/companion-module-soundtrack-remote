@@ -2,11 +2,11 @@ module.exports = function (self) {
   self.setVariableDefinitions([
     {
       variableId: "playback_state",
-      name: "Playback State",
+      name: "Playback State (offline, playing, paused, unpaired)",
     },
     {
       variableId: "playback_volume",
-      name: "Playback Volume",
+      name: "Playback Volume (0-16)",
     },
     {
       variableId: "playback_progress_s",
@@ -14,7 +14,7 @@ module.exports = function (self) {
     },
     {
       variableId: "playback_mode",
-      name: "Playback Mode",
+      name: "Playback Mode (AUTO, LINEAR, SHUFFLE)",
     },
     {
       variableId: "current_track_start",
@@ -30,7 +30,7 @@ module.exports = function (self) {
     },
     {
       variableId: "current_track_version",
-      name: "Current Track Version",
+      name: "Current Track Version (radio edit, etc.)",
     },
     {
       variableId: "current_track_duration_s",
@@ -38,11 +38,11 @@ module.exports = function (self) {
     },
     {
       variableId: "current_track_explicit",
-      name: "Current Track is Explicit",
+      name: "Current Track is Explicit (true, false)",
     },
     {
       variableId: "current_track_recognizability",
-      name: "Current Track Recognizability",
+      name: "Current Track Recognizability (0-100)",
     },
     {
       variableId: "current_track_album_id",
@@ -102,7 +102,7 @@ module.exports = function (self) {
     },
     {
       variableId: "upcoming_track_version",
-      name: "Upcoming Track Version",
+      name: "Upcoming Track Version (radio edit, etc.)",
     },
     {
       variableId: "upcoming_track_duration_s",
@@ -110,11 +110,11 @@ module.exports = function (self) {
     },
     {
       variableId: "upcoming_track_explicit",
-      name: "Upcoming Track is Explicit",
+      name: "Upcoming Track is Explicit (true, false)",
     },
     {
       variableId: "upcoming_track_recognizability",
-      name: "Upcoming Track Recognizability",
+      name: "Upcoming Track Recognizability (0-100)",
     },
     {
       variableId: "upcoming_track_album_id",
