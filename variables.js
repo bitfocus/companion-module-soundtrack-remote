@@ -13,6 +13,18 @@ module.exports = function (self) {
       name: "Playback Progress (s)",
     },
     {
+      variableId: "playback_progress_percent",
+      name: "Playback Progress (%)",
+    },
+    {
+      variableId: "playback_remaining_s",
+      name: "Playback Remaining (s)",
+    },
+    {
+      variableId: "playback_remaining_percent",
+      name: "Playback Remaining (%)",
+    },
+    {
       variableId: "playback_mode",
       name: "Playback Mode (AUTO, LINEAR, SHUFFLE)",
     },

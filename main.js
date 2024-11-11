@@ -13,10 +13,30 @@ const UpdateVariables = require("./variables");
 class SoundtrackInstance extends InstanceBase {
   constructor(internal) {
     super(internal);
+    this.wsClient = null;
+    this.client = null;
+    this.pollTimer = null;
   }
 
   async init(config) {
     this.config = config;
+
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+    }
+
+    if (this.client) {
+      this.client = null;
+    }
+
+    if (this.wsClient) {
+      this.wsClient.dispose();
+      this.wsClient = null;
+    }
+
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+    }
 
     const soundtrackHTTPURL = "https://api.soundtrackyourbrand.com/v2";
     const soundtrackWSURL = "wss://api.soundtrackyourbrand.com/v2/graphql-transport-ws";
@@ -173,8 +193,21 @@ class SoundtrackInstance extends InstanceBase {
             variableVals["playback_volume"] = result.data.playbackUpdate.playback.volume;
             variableVals["playback_progress_s"] = Math.floor(result.data.playbackUpdate.playback.progress.progressMs / 1000);
             variableVals["playback_mode"] = result.data.playbackUpdate.playback.playbackMode;
+            if (result.data.playbackUpdate.playback.state != "playing") {
+              this.log("debug", "Not playing, Clearing progress interval");
+              clearInterval(this.pollTimer);
+            }
             // current track
             if (result.data.playbackUpdate.playback.current) {
+              if (result.data.playbackUpdate.playback.state === "playing") {
+                this.log("debug", "Playing, Setting progress interval");
+                this.startTime = result.data.playbackUpdate.playback.current.start
+                this.durationS = Math.floor(result.data.playbackUpdate.playback.current.playable.durationMs / 1000);
+                this.pollTimer = setInterval(this.calculateProgress.bind(this), 1000);
+              }
+              else {
+                this.setProgressVars(Math.floor(result.data.playbackUpdate.playback.progress.progressMs / 1000), Math.floor(result.data.playbackUpdate.playback.current.playable.durationMs / 1000));
+              }
               variableVals["current_track_start"] = result.data.playbackUpdate.playback.current.start;
               variableVals["current_track_id"] = result.data.playbackUpdate.playback.current.playable.id;
               variableVals["current_track_title"] = result.data.playbackUpdate.playback.current.playable.title;
@@ -304,7 +337,7 @@ class SoundtrackInstance extends InstanceBase {
               variableVals["upcoming_track_playlist_title"] = undefined;
               variableVals["upcoming_track_playlist_description"] = undefined;
             }
-            this.log("debug", 'Setting variables: \n\n\n' + JSON.stringify(variableVals));
+            this.log("debug", 'Setting variables: \n' + JSON.stringify(variableVals));
             this.setVariableValues(variableVals);
           }
         }
@@ -320,6 +353,16 @@ class SoundtrackInstance extends InstanceBase {
   // When module gets deleted
   async destroy() {
     this.log("debug", "destroy");
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+    }
+    if (this.wsClient) {
+      this.wsClient.dispose();
+      this.wsClient = null;
+    }
+    if (this.client) {
+      this.client = null;
+    }
   }
 
   async configUpdated(config) {
@@ -340,6 +383,32 @@ class SoundtrackInstance extends InstanceBase {
         label: "Zone ID",
       }
     ];
+  }
+
+  async calculateProgress() {
+    this.log("debug", "Calculating progress");
+    this.log("debug", "Start time: " + this.startTime);
+    this.log("debug", "Duration: " + this.durationS);
+    // get UTC date/time
+    let now = new Date();
+    let startTime = new Date(this.startTime);
+    this.log("debug", "Now: " + now);
+    this.log("debug", "Start time UTC: " + startTime);
+    // calculate progress
+    let progressS = Math.floor((now - startTime) / 1000);
+    this.log("debug", "Progress: " + progressS);
+    // set variables
+    this.setProgressVars(progressS, this.durationS);
+  }
+
+  async setProgressVars( progressS, durationS) {
+    let variableVals = {};
+    variableVals["playback_progress_s"] = progressS;
+    variableVals["playback_progress_percent"] = Math.floor(progressS / durationS * 100);
+    variableVals["playback_remaining_s"] = durationS - progressS;
+    variableVals["playback_remaining_percent"] = 100 - Math.floor(progressS / durationS * 100);
+    this.log("debug", 'Setting variables: \n' + JSON.stringify(variableVals));
+    this.setVariableValues(variableVals);
   }
 
   updateActions() {
