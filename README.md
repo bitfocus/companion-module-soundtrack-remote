@@ -35,7 +35,7 @@ Controls Soundtrack Your Brand via [their API](https://studio.apollographql.com/
   - Current Track Version (radio edit, etc.)
   - Current Track Duration (s)
   - Current Track Explicit (true, false)
-  - Current Track Recognizeability (0-100)
+  - Current Track Recognizability (0-100)
   - Current Track Album ID
   - Current Track Album Title
   - Current Track Artist ID's
@@ -53,7 +53,7 @@ Controls Soundtrack Your Brand via [their API](https://studio.apollographql.com/
   - Upcoming Track Version (radio edit, etc.)
   - Upcoming Track Duration (s)
   - Upcoming Track Explicit (true, false)
-  - Upcoming Track Recognizeability (0-100)
+  - Upcoming Track Recognizability (0-100)
   - Upcoming Track Album ID
   - Upcoming Track Album Title
   - Upcoming Track Artist ID's
