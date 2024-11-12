@@ -431,6 +431,14 @@ class SoundtrackInstance extends InstanceBase {
   async configUpdated(config) {
     if (config.api_key !== this.config.api_key || config.zone_id !== this.config.zone_id) {
       // Reinitialize the module
+      this.playlists = [];
+      this.schedules = [];
+      this.playback = {};
+      this.currentTrack = {};
+      this.upcomingTrack = {};
+      this.progressS = 0;
+      this.durationS = 0;
+      this.lastUpdate = new Date();
       this.init(config);
     }
   }
