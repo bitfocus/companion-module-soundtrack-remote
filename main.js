@@ -201,7 +201,8 @@ class SoundtrackInstance extends InstanceBase {
             if (result.data.playbackUpdate.playback.current) {
               if (result.data.playbackUpdate.playback.state === "playing") {
                 this.log("debug", "Playing, Setting progress interval");
-                this.startTime = result.data.playbackUpdate.playback.current.start
+                this.progressS = Math.floor(result.data.playbackUpdate.playback.progress.progressMs / 1000);
+                this.lastUpdate = new Date();
                 this.durationS = Math.floor(result.data.playbackUpdate.playback.current.playable.durationMs / 1000);
                 this.pollTimer = setInterval(this.calculateProgress.bind(this), 1000);
               }
@@ -387,18 +388,15 @@ class SoundtrackInstance extends InstanceBase {
 
   async calculateProgress() {
     this.log("debug", "Calculating progress");
-    this.log("debug", "Start time: " + this.startTime);
-    this.log("debug", "Duration: " + this.durationS);
+    this.log("debug", "Last Progress: " + this.progressS + " / " + this.durationS + " seconds at " + this.lastUpdate);
     // get UTC date/time
     let now = new Date();
-    let startTime = new Date(this.startTime);
     this.log("debug", "Now: " + now);
-    this.log("debug", "Start time UTC: " + startTime);
     // calculate progress
-    let progressS = Math.floor((now - startTime) / 1000);
-    this.log("debug", "Progress: " + progressS);
+    let currentProgressS = this.progressS + Math.floor((now - this.lastUpdate) / 1000);
+    this.log("debug", "Progress: " + currentProgressS + " / " + this.durationS + " seconds");
     // set variables
-    this.setProgressVars(progressS, this.durationS);
+    this.setProgressVars(currentProgressS, this.durationS);
   }
 
   async setProgressVars( progressS, durationS) {
