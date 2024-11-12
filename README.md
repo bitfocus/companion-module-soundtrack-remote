@@ -5,7 +5,7 @@ Controls Soundtrack Your Brand via [their API](https://studio.apollographql.com/
 
 **V2.0.0**
 - Adds subscription to Soundtrack API for real-time updates
-- Now downloads a user's playlists, schedules, and stations for easier selection
+- Now downloads a user's zones, playlists, schedules, and stations for easier selection
 - Adds support for actions:
   - Assign Playlist (by name)
   - Assign Schedule (by name)

@@ -6,7 +6,7 @@ To request an API key from Soundtrack, fill out [this form from their website](h
 
 ## Getting ID's for Zones and media sources
 
-Due to limitations in Companion's module configuration, this module doesn't automatically list Soundtrack Zones. You will need to manually get these from browser URL's.
+Some of the actions and feedbacks in this module use the ID of a Zone, Playlist, Schedule, or Station. Here's how to get those ID's:
 
 ### Zones
 
