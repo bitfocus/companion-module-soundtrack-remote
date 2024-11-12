@@ -9,6 +9,11 @@ const { createClient, SubscribePayload } = require("graphql-ws");
 const UpgradeScripts = require("./upgrades");
 const UpdateActions = require("./actions");
 const UpdateVariables = require("./variables");
+const UpdateFeedbacks = require("./feedbacks");
+
+
+const soundtrackHTTPURL = "https://api.soundtrackyourbrand.com/v2";
+const soundtrackWSURL = "wss://api.soundtrackyourbrand.com/v2/graphql-transport-ws";
 
 class SoundtrackInstance extends InstanceBase {
   constructor(internal) {
@@ -38,8 +43,6 @@ class SoundtrackInstance extends InstanceBase {
       clearInterval(this.pollTimer);
     }
 
-    const soundtrackHTTPURL = "https://api.soundtrackyourbrand.com/v2";
-    const soundtrackWSURL = "wss://api.soundtrackyourbrand.com/v2/graphql-transport-ws";
     if (this.config.api_key) {
       // Setup HTTP GraphQL client for mutations
       this.client = new GraphQLClient(soundtrackHTTPURL, {
@@ -186,19 +189,28 @@ class SoundtrackInstance extends InstanceBase {
 
         for await (const result of playbackSubscription) {
           this.log("debug", JSON.stringify(result));
-          if (result.data.playbackUpdate.playback && result.data.playbackUpdate.playback.soundZone === this.config.zone_id) {
+          if (result.data.playbackUpdate["playback"] && result.data.playbackUpdate.playback.soundZone === this.config.zone_id) {
             let variableVals = {};
             // playback state
             variableVals["playback_state"] = result.data.playbackUpdate.playback.state;
             variableVals["playback_volume"] = result.data.playbackUpdate.playback.volume;
             variableVals["playback_progress_s"] = Math.floor(result.data.playbackUpdate.playback.progress.progressMs / 1000);
             variableVals["playback_mode"] = result.data.playbackUpdate.playback.playbackMode;
+            if (this.playback !== result.data.playbackUpdate.playback) {
+              this.playback = result.data.playbackUpdate.playback;
+              this.checkFeedbacks("playback_state", "playback_mode");
+            }
+
             if (result.data.playbackUpdate.playback.state != "playing") {
               this.log("debug", "Not playing, Clearing progress interval");
               clearInterval(this.pollTimer);
             }
             // current track
             if (result.data.playbackUpdate.playback.current) {
+              if (this.currentTrack !== result.data.playbackUpdate.playback.current) {
+                this.currentTrack = result.data.playbackUpdate.playback.current;
+                this.checkFeedbacks("playback_source_type", "playback_source_playlist", "playback_source_schedule", "current_track_explicit", "current_track_id", "current_track_title");
+              }
               if (result.data.playbackUpdate.playback.state === "playing") {
                 this.log("debug", "Playing, Setting progress interval");
                 this.progressS = Math.floor(result.data.playbackUpdate.playback.progress.progressMs / 1000);
@@ -253,6 +265,7 @@ class SoundtrackInstance extends InstanceBase {
               }
             }
             else {
+              this.currentTrack = {};
               variableVals["current_track_start"] = undefined;
               variableVals["current_track_id"] = undefined;
               variableVals["current_track_title"] = undefined;
@@ -275,6 +288,10 @@ class SoundtrackInstance extends InstanceBase {
 
             // upcoming track
             if (result.data.playbackUpdate.playback.upcoming[0]) {
+              if (this.upcomingTrack !== result.data.playbackUpdate.playback.upcoming[0]) {
+                this.upcomingTrack = result.data.playbackUpdate.playback.upcoming[0];
+                this.checkFeedbacks("upcoming_track_explicit", "upcoming_track_id", "upcoming_track_title");
+              }
               variableVals["upcoming_track_start"] = result.data.playbackUpdate.playback.upcoming[0].start;
               variableVals["upcoming_track_id"] = result.data.playbackUpdate.playback.upcoming[0].playable.id;
               variableVals["upcoming_track_title"] = result.data.playbackUpdate.playback.upcoming[0].playable.title;
@@ -319,6 +336,7 @@ class SoundtrackInstance extends InstanceBase {
               }
             }
             else {
+              this.upcomingTrack = {};
               variableVals["upcoming_track_start"] = undefined;
               variableVals["upcoming_track_id"] = undefined;
               variableVals["upcoming_track_title"] = undefined;
@@ -345,11 +363,11 @@ class SoundtrackInstance extends InstanceBase {
       }
       )();
 
+      this.getLibrary(); // also updates actions and feedbacks
+      this.updateVariables(); // export variables
+
       this.updateStatus(InstanceStatus.Ok);
     }
-
-    this.updateActions(); // export actions
-    this.updateVariables(); // export variables
   }
   // When module gets deleted
   async destroy() {
@@ -367,7 +385,10 @@ class SoundtrackInstance extends InstanceBase {
   }
 
   async configUpdated(config) {
-    this.init(config);
+    if (config.api_key !== this.config.api_key || config.zone_id !== this.config.zone_id) {
+      // Reinitialize the module
+      this.init(config);
+    }
   }
 
   // Return config fields for web config
@@ -384,6 +405,57 @@ class SoundtrackInstance extends InstanceBase {
         label: "Zone ID",
       }
     ];
+  }
+
+  async getLibrary() {
+    this.log("debug", "Getting library");
+    if (this.client) {
+      // get account from soundzone
+      let res = await this.client.request(
+        `query { soundZone(id: "${this.config.zone_id}") { account { id } } }`
+      );
+      this.log("debug", "Account ID: " + res.soundZone.account.id);
+      // get library from account
+      res = await this.client.request(
+        `query { 
+          musicLibrary(id: "${res.soundZone.account.id}") {
+            playlists (first: 1000) {
+              edges {
+                node {
+                  id
+                  name
+                }
+              }
+            }
+            schedules (first: 1000) {
+              edges {
+                node {
+                  id
+                  name
+                }
+              }
+            }
+          }
+        }`
+      );
+      this.log("debug", JSON.stringify(res));
+      this.playlists = [];
+      for (let i = 0; i < res.musicLibrary.playlists.edges.length; i++) {
+        this.playlists.push({
+          id: res.musicLibrary.playlists.edges[i].node.id,
+          label: res.musicLibrary.playlists.edges[i].node.name,
+        });
+      }
+      this.schedules = [];
+      for (let i = 0; i < res.musicLibrary.schedules.edges.length; i++) {
+        this.schedules.push({
+          id: res.musicLibrary.schedules.edges[i].node.id,
+          label: res.musicLibrary.schedules.edges[i].node.name,
+        });
+      }
+    }
+    this.updateActions();
+    this.updateFeedbacks();
   }
 
   async calculateProgress() {
@@ -415,6 +487,10 @@ class SoundtrackInstance extends InstanceBase {
 
   updateVariables() {
     UpdateVariables(this);
+  }
+
+  updateFeedbacks() {
+    UpdateFeedbacks(this);
   }
 
 }

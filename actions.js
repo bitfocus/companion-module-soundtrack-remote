@@ -56,7 +56,7 @@ module.exports = function (self) {
       },
     },
     assign_source: {
-      name: "Assign source",
+      name: "Assign source by ID",
       description:
         "Assign a source (schedule, playlist, or station) to this zone",
       options: [
@@ -103,6 +103,86 @@ module.exports = function (self) {
             `mutation { soundZoneAssignSource(input: {soundZones: ["${self.config.zone_id}"], source: "${event.options.source}", immediate: ${event.options.immediate}}) {soundZones} }`
           );
         }
+        self.log("debug", JSON.stringify(res));
+      },
+    },
+    assign_playlist: {
+      name: "Assign Playlist",
+      description: "Assign a playlist to this zone",
+      options: [
+        {
+          id: "playlist",
+          type: "dropdown",
+          label: "Playlist",
+          choices: self.playlists ? self.playlists : [],
+          default: self.playlists ? self.playlists[0].id : "",
+          tooltip: "The playlist to assign to this zone",
+        },
+        {
+          id: "immediate",
+          type: "checkbox",
+          label: "Play Immediately",
+          tooltip:
+            "Play the playlist immediately instead of after the current track finishes",
+          default: false,
+        },
+        {
+          id: "setTrackIndex",
+          type: "checkbox",
+          label: "Set Track Index?",
+          tooltip: "Enable setting track index.",
+          default: false,
+        },
+        {
+          id: "sourceTrackIndex",
+          type: "number",
+          label: "Track Index",
+          tooltip: "The index of the track to start playing from",
+          min: 0,
+          isVisible: (options) => {
+            return options.setTrackIndex;
+          },
+        },
+      ],
+      callback: async (event) => {
+        var res;
+        if (event.options.setTrackIndex) {
+          res = await self.client.request(
+            `mutation { soundZoneAssignSource(input: {soundZones: ["${self.config.zone_id}"], source: "${event.options.playlist}", immediate: ${event.options.immediate}, sourceTrackIndex: ${event.options.sourceTrackIndex}}) {soundZones} }`
+          );
+        } else {
+          res = await self.client.request(
+            `mutation { soundZoneAssignSource(input: {soundZones: ["${self.config.zone_id}"], source: "${event.options.playlist}", immediate: ${event.options.immediate}}) {soundZones} }`
+          );
+        }
+        self.log("debug", JSON.stringify(res));
+      },
+    },
+    assign_schedule: {
+      name: "Assign Schedule",
+      description: "Assign a schedule to this zone",
+      options: [
+        {
+          id: "schedule",
+          type: "dropdown",
+          label: "Schedule",
+          choices: self.schedules ? self.schedules : [],
+          default: self.schedules ? self.schedules[0].id : "",
+          tooltip: "The schedule to assign to this zone",
+        },
+        {
+          id: "immediate",
+          type: "checkbox",
+          label: "Play Immediately",
+          tooltip:
+            "Play the schedule immediately instead of after the current track finishes",
+          default: false,
+        },
+      ],
+      callback: async (event) => {
+        let res = await self.client.request(
+          `mutation { soundZoneAssignSource(input: {soundZones: ["${self.config.zone_id}"], source: "${event.options.schedule}", immediate: ${event.options.immediate}}) {soundZones} }`
+        );
         self.log("debug", JSON.stringify(res));
       },
     },
