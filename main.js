@@ -224,6 +224,9 @@ class SoundtrackInstance extends InstanceBase {
                   this.progressS = Math.floor(result.data.playbackUpdate.playback.progress.progressMs / 1000);
                   this.lastUpdate = new Date();
                   this.durationS = Math.floor(result.data.playbackUpdate.playback.current.playable.durationMs / 1000);
+                  if (this.pollTimer) {
+                    clearInterval(this.pollTimer);
+                  }
                   this.pollTimer = setInterval(this.calculateProgress.bind(this), 1000);
                 }
                 else {

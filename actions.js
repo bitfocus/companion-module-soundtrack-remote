@@ -208,10 +208,10 @@ module.exports = function (self) {
         },
       ],
       callback: async (event) => {
-        let res = await self.client.request(
-          `mutation { soundZoneQueueTracks(input: {soundZone: "${self.config.zone_id}", tracks: ["${event.options.announcement}"], immediate: ${event.options.immediate}}) {status} }`
-        );
-        self.log("debug", JSON.stringify(res));
+        let payload = `mutation { soundZoneQueueTracks(input: {soundZone: "${self.config.zone_id}", tracks: ["${event.options.announcement}"], immediate: ${event.options.immediate}}) {status} }`;
+        self.log("info", payload);
+        let res = await self.client.request(payload);
+        self.log("info", JSON.stringify(res));
       },
     },
     play_track: {
@@ -235,10 +235,10 @@ module.exports = function (self) {
         },
       ],
       callback: async (event) => {
-        let res = await self.client.request(
-          `mutation { soundZoneQueueTracks(input: {soundZone: "${self.config.zone_id}", tracks: ["${event.options.track}"], immediate: ${event.options.immediate}}) {status} }`
-        );
-        self.log("debug", JSON.stringify(res));
+        let payload = `mutation { soundZoneQueueTracks(input: {soundZone: "${self.config.zone_id}", tracks: ["${event.options.track}"], immediate: ${event.options.immediate}}) {status} }`;
+        self.log("info", payload);
+        let res = await self.client.request(payload);
+        self.log("info", JSON.stringify(res));
       },
     },
   });
