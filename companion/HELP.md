@@ -31,6 +31,8 @@ Schedule: `https://business.soundtrackyourbrand.com/accounts/{{ your_account_id 
 - Assign Source by ID (Playlist, Schedule, or Station)
 - Assign Playlist (by name)
 - Assign Schedule (by name)
+- Play/Queue Announcement
+- Play/Queue Track by ID
 
 ## Feedbacks
 - Change style based on playback state (Offline, Playing, Paused, Unpaired)

@@ -499,11 +499,12 @@ class SoundtrackInstance extends InstanceBase {
       let res = await this.client.request(
         `query { soundZone(id: "${this.config.zone_id}") { account { id } } }`
       );
-      this.log("debug", "Account ID: " + res.soundZone.account.id);
+      let accountID = res.soundZone.account.id;
+      this.log("debug", "Account ID: " + accountID);
       // get library from account
       res = await this.client.request(
         `query { 
-          musicLibrary(id: "${res.soundZone.account.id}") {
+          musicLibrary(id: "${accountID}") {
             playlists (first: 1000) {
               edges {
                 node {
@@ -536,6 +537,24 @@ class SoundtrackInstance extends InstanceBase {
         this.schedules.push({
           id: res.musicLibrary.schedules.edges[i].node.id,
           label: res.musicLibrary.schedules.edges[i].node.name,
+        });
+      }
+
+      // get account announcements
+      res = await this.client.request(
+        `query { 
+          getAccountAnnouncements(accountId: "${accountID}") {
+            id
+            name
+          }
+        }`
+      );
+      this.log("debug", JSON.stringify(res));
+      this.announcements = [];
+      for (let i = 0; i < res.getAccountAnnouncements.length; i++) {
+        this.announcements.push({
+          id: res.getAccountAnnouncements[i].id,
+          label: res.getAccountAnnouncements[i].name,
         });
       }
     }
