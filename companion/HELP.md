@@ -51,8 +51,12 @@ Schedule: `https://business.soundtrackyourbrand.com/accounts/{{ your_account_id 
 - Playback state (Offline, Playing, Paused, Unpaired)
 - Playback Volume (0-16)
 - Playback Progress (s)
+- Playback Progress (mm:ss)
+- Playback Progress (hh:mm:ss)
 - Playback Progress (%)
 - Playback Remaining (s)
+- Playback Remaining (mm:ss)
+- Playback Remaining (hh:mm:ss)
 - Playback Remaining (%)
 - Playback Mode (Auto, Linear, Shuffle)
 ### Current Track
@@ -61,6 +65,8 @@ Schedule: `https://business.soundtrackyourbrand.com/accounts/{{ your_account_id 
 - Current Track Title
 - Current Track Version (radio edit, etc.)
 - Current Track Duration (s)
+- Current Track Duration (mm:ss)
+- Current Track Duration (hh:mm:ss)
 - Current Track Explicit (true, false)
 - Current Track Recognizeability (0-100)
 - Current Track Album ID
@@ -80,6 +86,8 @@ Schedule: `https://business.soundtrackyourbrand.com/accounts/{{ your_account_id 
 - Upcoming Track Title
 - Upcoming Track Version (radio edit, etc.)
 - Upcoming Track Duration (s)
+- Upcoming Track Duration (mm:ss)
+- Upcoming Track Duration (hh:mm:ss)
 - Upcoming Track Explicit (true, false)
 - Upcoming Track Recognizeability (0-100)
 - Upcoming Track Album ID

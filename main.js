@@ -48,10 +48,6 @@ class SoundtrackInstance extends InstanceBase {
       this.wsClient = null;
     }
 
-    if (this.pollTimer) {
-      clearInterval(this.pollTimer);
-    }
-
     if (this.config.api_key && this.config.api_key !== "") {
       // Setup HTTP GraphQL client for mutations
       this.client = new GraphQLClient(soundtrackHTTPURL, {
@@ -199,12 +195,14 @@ class SoundtrackInstance extends InstanceBase {
 
           for await (const result of playbackSubscription) {
             this.log("debug", JSON.stringify(result));
-            if (result.data.playbackUpdate["playback"] && result.data.playbackUpdate.playback.soundZone === this.config.zone_id) {
+            if (Object.hasOwn(result.data.playbackUpdate,"playback") && result.data.playbackUpdate.playback.soundZone === this.config.zone_id) {
               let variableVals = {};
               // playback state
               variableVals["playback_state"] = result.data.playbackUpdate.playback.state;
               variableVals["playback_volume"] = result.data.playbackUpdate.playback.volume;
               variableVals["playback_progress_s"] = Math.floor(result.data.playbackUpdate.playback.progress.progressMs / 1000);
+              variableVals["playback_progress_mm_ss"] = this.mmssFromSeconds(Math.floor(result.data.playbackUpdate.playback.progress.progressMs / 1000));
+              variableVals["playback_progress_hh_mm_ss"] = this.hhmmssFromSeconds(Math.floor(result.data.playbackUpdate.playback.progress.progressMs / 1000));
               variableVals["playback_mode"] = result.data.playbackUpdate.playback.playbackMode;
               if (this.playback !== result.data.playbackUpdate.playback) {
                 this.playback = result.data.playbackUpdate.playback;
@@ -236,6 +234,8 @@ class SoundtrackInstance extends InstanceBase {
                 variableVals["current_track_title"] = result.data.playbackUpdate.playback.current.playable.title;
                 variableVals["current_track_version"] = result.data.playbackUpdate.playback.current.playable.version;
                 variableVals["current_track_duration_s"] = Math.floor(result.data.playbackUpdate.playback.current.playable.durationMs / 1000);
+                variableVals["current_track_duration_mm_ss"] = this.mmssFromSeconds(Math.floor(result.data.playbackUpdate.playback.current.playable.durationMs / 1000));
+                variableVals["current_track_duration_hh_mm_ss"] = this.hhmmssFromSeconds(Math.floor(result.data.playbackUpdate.playback.current.playable.durationMs / 1000));
                 variableVals["current_track_explicit"] = result.data.playbackUpdate.playback.current.playable.explicit;
                 variableVals["current_track_recognizability"] = result.data.playbackUpdate.playback.current.playable.recognizability;
                 variableVals["current_track_album_id"] = result.data.playbackUpdate.playback.current.playable.album.id;
@@ -307,6 +307,8 @@ class SoundtrackInstance extends InstanceBase {
                 variableVals["upcoming_track_title"] = result.data.playbackUpdate.playback.upcoming[0].playable.title;
                 variableVals["upcoming_track_version"] = result.data.playbackUpdate.playback.upcoming[0].playable.version;
                 variableVals["upcoming_track_duration_s"] = Math.floor(result.data.playbackUpdate.playback.upcoming[0].playable.durationMs / 1000);
+                variableVals["upcoming_track_duration_mm_ss"] = this.mmssFromSeconds(Math.floor(result.data.playbackUpdate.playback.upcoming[0].playable.durationMs / 1000));
+                variableVals["upcoming_track_duration_hh_mm_ss"] = this.hhmmssFromSeconds(Math.floor(result.data.playbackUpdate.playback.upcoming[0].playable.durationMs / 1000));
                 variableVals["upcoming_track_explicit"] = result.data.playbackUpdate.playback.upcoming[0].playable.explicit;
                 variableVals["upcoming_track_recognizability"] = result.data.playbackUpdate.playback.upcoming[0].playable.recognizability;
                 variableVals["upcoming_track_album_id"] = result.data.playbackUpdate.playback.upcoming[0].playable.album.id;
@@ -476,6 +478,20 @@ class SoundtrackInstance extends InstanceBase {
     ];
   }
 
+  mmssFromSeconds(seconds) {
+    let minutes = Math.floor(seconds / 60);
+    let remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
+  }
+
+  hhmmssFromSeconds(seconds) {
+    let hours = Math.floor(seconds / 3600);
+    let remainingMinutes = Math.floor((seconds % 3600) / 60);
+    let remainingSeconds = seconds % 60;
+    return `${hours}:${remainingMinutes < 10 ? "0" : ""}${remainingMinutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
+  }
+
+
   async getLibrary() {
     this.log("debug", "Getting library");
     if (this.client) {
@@ -543,8 +559,12 @@ class SoundtrackInstance extends InstanceBase {
   async setProgressVars( progressS, durationS) {
     let variableVals = {};
     variableVals["playback_progress_s"] = progressS;
+    variableVals["playback_progress_mm_ss"] = this.mmssFromSeconds(progressS);
+    variableVals["playback_progress_hh_mm_ss"] = this.hhmmssFromSeconds(progressS);
     variableVals["playback_progress_percent"] = Math.floor(progressS / durationS * 100);
     variableVals["playback_remaining_s"] = durationS - progressS;
+    variableVals["playback_remaining_mm_ss"] = this.mmssFromSeconds(durationS - progressS);
+    variableVals["playback_remaining_hh_mm_ss"] = this.hhmmssFromSeconds(durationS - progressS);
     variableVals["playback_remaining_percent"] = 100 - Math.floor(progressS / durationS * 100);
     this.log("debug", 'Setting variables: \n' + JSON.stringify(variableVals));
     this.setVariableValues(variableVals);

@@ -26,7 +26,12 @@ module.exports = function (self) {
             },
         ],
         callback: function (feedback) {
-            return self.playback.state === feedback.options.state
+            if (self.playback) {
+                return self.playback.state === feedback.options.state
+            }
+            else {
+                return false
+            }
         },
     };
     feedbacks["playback_mode"] = {
@@ -50,7 +55,12 @@ module.exports = function (self) {
             },
         ],
         callback: function (feedback) {
-            return self.playback.playbackMode === feedback.options.mode
+            if (self.playback) {
+                return self.playback.playbackMode === feedback.options.mode
+            }
+            else {
+                return false
+            }
         },
     };
     feedbacks["playback_source_type"] = {
@@ -74,7 +84,12 @@ module.exports = function (self) {
             },
         ],
         callback: function (feedback) {
-            return self.currentTrack.source.__typename === feedback.options.source_type
+            if (self.currentTrack.source) {
+                return self.currentTrack.source.__typename === feedback.options.source_type
+            }
+            else {
+                return false
+            }
         },
     };
     feedbacks["playback_source_playlist"] = {
@@ -139,7 +154,12 @@ module.exports = function (self) {
         },
         options: [],
         callback: function (feedback) {
-            return self.currentTrack.playable.explicit
+            if (self.currentTrack) {
+                return self.currentTrack.playable.explicit
+            }
+            else {
+                return false
+            }
         },
     };
     feedbacks["current_track_id"] = {
@@ -158,7 +178,12 @@ module.exports = function (self) {
             },
         ],
         callback: function (feedback) {
-            return self.currentTrack.playable.id === feedback.options.track_id;
+            if (self.currentTrack) {
+                return self.currentTrack.playable.id === feedback.options.track_id;
+            }
+            else {
+                return false
+            }
         },
     };
     feedbacks["current_track_title"] = {
@@ -177,7 +202,12 @@ module.exports = function (self) {
             },
         ],
         callback: function (feedback) {
-            return self.currentTrack.playable.title === feedback.options.track_title
+            if (self.currentTrack) {
+                return self.currentTrack.playable.title === feedback.options.track_title
+            }
+            else {
+                return false
+            }
         },
     };
     feedbacks["upcoming_track_explicit"] = {
@@ -189,7 +219,12 @@ module.exports = function (self) {
         },
         options: [],
         callback: function (feedback) {
-            return self.upcomingTrack.playable.explicit
+            if (self.upcomingTrack) {
+                return self.upcomingTrack.playable.explicit
+            }
+            else {
+                return false
+            }
         },
     };
     feedbacks["upcoming_track_id"] = {
@@ -208,7 +243,12 @@ module.exports = function (self) {
             },
         ],
         callback: function (feedback) {
-            return self.upcomingTrack.playable.id === feedback.options.track_id;
+            if (self.upcomingTrack) {
+                return self.upcomingTrack.playable.id === feedback.options.track_id;
+            }
+            else {
+                return false
+            }
         },
     };
     feedbacks["upcoming_track_title"] = {
@@ -227,7 +267,12 @@ module.exports = function (self) {
             },
         ],
         callback: function (feedback) {
-            return self.upcomingTrack.playable.title === feedback.options.track_title
+            if (self.upcomingTrack) {
+                return self.upcomingTrack.playable.title === feedback.options.track_title
+            }
+            else {
+                return false
+            }
         },
     };
     self.setFeedbackDefinitions(feedbacks);

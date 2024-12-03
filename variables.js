@@ -13,12 +13,28 @@ module.exports = function (self) {
       name: "Playback Progress (s)",
     },
     {
+      variableId: "playback_progress_mm_ss",
+      name: "Playback Progress (mm:ss)",
+    },
+    {
+      variableId: "playback_progress_hh_mm_ss",
+      name: "Playback Progress (hh:mm:ss)",
+    },
+    {
       variableId: "playback_progress_percent",
       name: "Playback Progress (%)",
     },
     {
       variableId: "playback_remaining_s",
       name: "Playback Remaining (s)",
+    },
+    {
+      variableId: "playback_remaining_mm_ss",
+      name: "Playback Remaining (mm:ss)",
+    },
+    {
+      variableId: "playback_remaining_hh_mm_ss",
+      name: "Playback Remaining (hh:mm:ss)",
     },
     {
       variableId: "playback_remaining_percent",
@@ -47,6 +63,14 @@ module.exports = function (self) {
     {
       variableId: "current_track_duration_s",
       name: "Current Track Duration (s)",
+    },
+    {
+      variableId: "current_track_duration_mm_ss",
+      name: "Current Track Duration (mm:ss)",
+    },
+    {
+      variableId: "current_track_duration_hh_mm_ss",
+      name: "Current Track Duration (hh:mm:ss)",
     },
     {
       variableId: "current_track_explicit",
@@ -119,6 +143,14 @@ module.exports = function (self) {
     {
       variableId: "upcoming_track_duration_s",
       name: "Upcoming Track Duration (s)",
+    },
+    {
+      variableId: "upcoming_track_duration_mm_ss",
+      name: "Upcoming Track Duration (mm:ss)",
+    },
+    {
+      variableId: "upcoming_track_duration_hh_mm_ss",
+      name: "Upcoming Track Duration (hh:mm:ss)",
     },
     {
       variableId: "upcoming_track_explicit",
