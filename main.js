@@ -30,6 +30,7 @@ class SoundtrackInstance extends InstanceBase {
     this.progressS = 0;
     this.durationS = 0;
     this.lastUpdate = new Date();
+    this.supportsAnnouncements = false;
   }
 
   async init(config) {
@@ -543,27 +544,32 @@ class SoundtrackInstance extends InstanceBase {
         });
       }
 
-      // get account announcements
-      res = await this.client.request(
-        `query { 
-          getAccountAnnouncements(accountId: "${accountID}") {
-            id
-            name
-          }
-        }`
-      );
-      this.log("debug", JSON.stringify(res));
-      this.announcements = [];
-      for (let i = 0; i < res.getAccountAnnouncements.length; i++) {
-        this.announcements.push({
-          id: res.getAccountAnnouncements[i].id,
-          label: res.getAccountAnnouncements[i].name,
-        });
+      try {
+        // get account announcements
+        res = await this.client.request(
+          `query { 
+            getAccountAnnouncements(accountId: "${accountID}") {
+              id
+              name
+            }
+          }`
+        );
+        this.log("debug", JSON.stringify(res));
+        this.announcements = [];
+        for (let i = 0; i < res.getAccountAnnouncements.length; i++) {
+          this.announcements.push({
+            id: res.getAccountAnnouncements[i].id,
+            label: res.getAccountAnnouncements[i].name,
+          });
+        }
+        this.supportsAnnouncements = true;
+      } catch (error) {
+        this.log("debug", "Announcements not supported");
       }
-    }
     this.updateActions();
     this.updateFeedbacks();
   }
+}
 
   async calculateProgress() {
     this.log("debug", "Calculating progress");

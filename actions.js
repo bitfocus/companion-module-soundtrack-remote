@@ -1,5 +1,5 @@
 module.exports = function (self) {
-  self.setActionDefinitions({
+  let actions = {
     play: {
       name: "Play",
       description: "Resume the current track in this zone.",
@@ -186,34 +186,6 @@ module.exports = function (self) {
         self.log("debug", JSON.stringify(res));
       },
     },
-    play_announcement: {
-      name: "Play/Queue Announcement",
-      description: "Play/Queue an announcement in this zone",
-      options: [
-        {
-          id: "announcement",
-          type: "dropdown",
-          label: "Announcement",
-          choices: self.announcements ? self.announcements : [],
-          default: self.announcements ? self.announcements[0].id : "",
-          tooltip: "The announcement to play in this zone",
-        },
-        {
-          id: "immediate",
-          type: "checkbox",
-          label: "Play Immediately",
-          tooltip:
-            "Play the announcement immediately instead of after the current track finishes",
-          default: false,
-        },
-      ],
-      callback: async (event) => {
-        let payload = `mutation { soundZoneQueueTracks(input: {soundZone: "${self.config.zone_id}", tracks: ["${event.options.announcement}"], immediate: ${event.options.immediate}}) {status} }`;
-        self.log("info", payload);
-        let res = await self.client.request(payload);
-        self.log("info", JSON.stringify(res));
-      },
-    },
     play_track: {
       name: "Play/Queue Track",
       description: "Play/Queue a track in this zone by ID",
@@ -241,5 +213,36 @@ module.exports = function (self) {
         self.log("info", JSON.stringify(res));
       },
     },
-  });
+  };
+  if (self.supportsAnnouncements) {
+    actions.play_announcement = {
+      name: "Play/Queue Announcement",
+      description: "Play/Queue an announcement in this zone",
+      options: [
+        {
+          id: "announcement",
+          type: "dropdown",
+          label: "Announcement",
+          choices: self.announcements ? self.announcements : [],
+          default: self.announcements ? self.announcements[0].id : "",
+          tooltip: "The announcement to play in this zone",
+        },
+        {
+          id: "immediate",
+          type: "checkbox",
+          label: "Play Immediately",
+          tooltip:
+            "Play the announcement immediately instead of after the current track finishes",
+          default: false,
+        },
+      ],
+      callback: async (event) => {
+        let payload = `mutation { soundZoneQueueTracks(input: {soundZone: "${self.config.zone_id}", tracks: ["${event.options.announcement}"], immediate: ${event.options.immediate}}) {status} }`;
+        self.log("info", payload);
+        let res = await self.client.request(payload);
+        self.log("info", JSON.stringify(res));
+      },
+    };
+  }
+  self.setActionDefinitions(actions);
 };
