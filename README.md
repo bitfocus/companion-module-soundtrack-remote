@@ -9,6 +9,7 @@ Controls Soundtrack Your Brand via [their API](https://studio.apollographql.com/
 - Adds support for actions:
   - Assign Playlist (by name)
   - Assign Schedule (by name)
+  - Play/Queue Announcement
 - Adds support for feedbacks:
   - Change style based on playback state (Offline, Playing, Paused, Unpaired)
   - Change style based on playback mode (Auto, Linear, Shuffle)
