@@ -1,6 +1,6 @@
 {
 	"name": "soundtrack-remote",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"main": "main.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
@@ -13,14 +13,14 @@
 		"url": "git+https://github.com/bitfocus/companion-module-soundtrack-remote.git"
 	},
 	"dependencies": {
-		"@companion-module/base": "~1.0.2",
+		"@companion-module/base": "~1.11",
 		"graphql": "^16.8.1",
 		"graphql-request": "^5.0.0",
 		"graphql-ws": "^5.16.0",
 		"ws": "^7.4.0"
 	},
 	"devDependencies": {
-		"@companion-module/tools": "^0.5.1",
+		"@companion-module/tools": "^2.3.0",
 		"typescript": ">=2.8.0"
 	}
 }
