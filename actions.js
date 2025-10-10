@@ -115,7 +115,7 @@ module.exports = function (self) {
           type: "dropdown",
           label: "Playlist",
           choices: self.playlists ? self.playlists : [],
-          default: self.playlists ? self.playlists[0].id : "",
+          default: self.playlists.length > 0 ? self.playlists[0].id : "",
           tooltip: "The playlist to assign to this zone",
         },
         {
@@ -167,7 +167,7 @@ module.exports = function (self) {
           type: "dropdown",
           label: "Schedule",
           choices: self.schedules ? self.schedules : [],
-          default: self.schedules ? self.schedules[0].id : "",
+          default: self.schedules.length > 0 ? self.schedules[0].id : "",
           tooltip: "The schedule to assign to this zone",
         },
         {
@@ -224,7 +224,8 @@ module.exports = function (self) {
           type: "dropdown",
           label: "Announcement",
           choices: self.announcements ? self.announcements : [],
-          default: self.announcements ? self.announcements[0].id : "",
+          default:
+            self.announcements.length > 0 ? self.announcements[0].id : "",
           tooltip: "The announcement to play in this zone",
         },
         {
