@@ -3,6 +3,9 @@ See [HELP.md](./HELP.md) and [LICENSE](./LICENSE)
 
 Controls Soundtrack Your Brand via [their API](https://studio.apollographql.com/public/soundtrack/)
 
+**V2.1.0**
+- Adds variable support in text and number fields
+
 **V2.0.0**
 - Adds subscription to Soundtrack API for real-time updates
 - Now downloads a user's zones, playlists, schedules, and stations for easier selection
