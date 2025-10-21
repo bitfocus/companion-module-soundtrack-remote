@@ -2,17 +2,17 @@
 # yarn lockfile v1
 
 
-"@companion-module/base@~1.11":
-  version "1.11.3"
-  resolved "https://registry.yarnpkg.com/@companion-module/base/-/base-1.11.3.tgz#12e54056d1873c588d47869917fbbb850871651c"
-  integrity sha512-6oVmvtLguDly+zcSN86D0Z++yI60oeH3X/gumJ1FdBkZjdozlKFAsSykIvYQ0QIs+SMFRh1C9M/F6egOVT/RMA==
+"@companion-module/base@~1.13":
+  version "1.13.4"
+  resolved "https://registry.yarnpkg.com/@companion-module/base/-/base-1.13.4.tgz#3a095ae5359001b147f7723740b09cbf09853a93"
+  integrity sha512-hPglzeIzPGvWOlflAdMZn5rn2kdADu5LAoEd91vvT4yTOsemef9oiaVpmK0N1E+KUq2+1aAvZu/Jvpxvi1P6+g==
   dependencies:
     ajv "^8.17.1"
     colord "^2.9.3"
     ejson "^2.2.3"
     eventemitter3 "^5.0.1"
     mimic-fn "^3.1.0"
-    nanoid "^3.3.8"
+    nanoid "^3.3.11"
     p-queue "^6.6.2"
     p-timeout "^4.1.0"
     tslib "^2.8.1"
@@ -915,7 +915,7 @@ minizlib@^3.1.0:
   dependencies:
     minipass "^7.1.2"
 
-nanoid@^3.3.8:
+nanoid@^3.3.11:
   version "3.3.11"
   resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.3.11.tgz#4f4f112cefbe303202f2199838128936266d185b"
   integrity sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==

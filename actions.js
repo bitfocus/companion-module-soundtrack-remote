@@ -1,3 +1,5 @@
+const { Regex } = require("@companion-module/base");
+
 module.exports = function (self) {
   let actions = {
     play: {
@@ -38,17 +40,23 @@ module.exports = function (self) {
       description: "Set the volume of this zone.",
       options: [
         {
-          type: "number",
+          type: "textinput",
           id: "volume",
           label: "Volume",
           default: "10",
-          min: 1,
-          max: 16,
-          step: 1,
+          tooltip: "Volume level from 0 to 16",
+          Regex: Regex.NUMBER,
           required: true,
+          useVariables: true,
         },
       ],
       callback: async (event) => {
+        // Clamp volume between 0 and 16
+        if (event.options.volume < 0) {
+          event.options.volume = 0;
+        } else if (event.options.volume > 16) {
+          event.options.volume = 16;
+        }
         let res = await self.client.request(
           `mutation { setVolume(input: {soundZone: "${self.config.zone_id}", volume: ${event.options.volume}}) {status} }`
         );
@@ -65,6 +73,7 @@ module.exports = function (self) {
           id: "source",
           label: "Source ID (schedule, playlist, or station)",
           required: true,
+          useVariables: true,
         },
         {
           id: "immediate",
@@ -83,13 +92,13 @@ module.exports = function (self) {
         },
         {
           id: "sourceTrackIndex",
-          type: "number",
+          type: "textinput",
           label: "Track Index",
           tooltip: "The index of the track to start playing from",
-          min: 0,
-          isVisible: (options) => {
-            return options.setTrackIndex;
-          },
+          Regex: Regex.NUMBER,
+          default: "0",
+          useVariables: true,
+          isVisibleExpression: "$(options:setTrackIndex)",
         },
       ],
       callback: async (event) => {
@@ -135,13 +144,22 @@ module.exports = function (self) {
         },
         {
           id: "sourceTrackIndex",
-          type: "number",
+          type: "textinput",
           label: "Track Index",
           tooltip: "The index of the track to start playing from",
-          min: 0,
-          isVisible: (options) => {
-            return options.setTrackIndex;
-          },
+          default: "0",
+          useVariables: true,
+          isVisibleExpression: "$(options:setTrackIndex)",
+        },
+        {
+          id: "sourceTrackIndex",
+          type: "textinput",
+          label: "Track Index",
+          tooltip: "The index of the track to start playing from",
+          Regex: Regex.NUMBER,
+          default: "0",
+          useVariables: true,
+          isVisibleExpression: "$(options:setTrackIndex)",
         },
       ],
       callback: async (event) => {
@@ -196,6 +214,7 @@ module.exports = function (self) {
           label: "Track ID",
           required: true,
           tooltip: "The track to play in this zone",
+          useVariables: true,
         },
         {
           id: "immediate",
