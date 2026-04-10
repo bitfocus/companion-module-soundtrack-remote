@@ -21,6 +21,7 @@ class SoundtrackInstance extends InstanceBase {
     this.wsClient = null;
     this.client = null;
     this.pollTimer = null;
+    this.subscriptionRestartTimer = null;
     this.zones = [];
     this.playlists = [];
     this.schedules = [];
@@ -38,6 +39,11 @@ class SoundtrackInstance extends InstanceBase {
 
     if (this.pollTimer) {
       clearInterval(this.pollTimer);
+    }
+
+    if (this.subscriptionRestartTimer) {
+      clearTimeout(this.subscriptionRestartTimer);
+      this.subscriptionRestartTimer = null;
     }
 
     if (this.client) {
@@ -149,6 +155,10 @@ class SoundtrackInstance extends InstanceBase {
     this.log("debug", "destroy");
     if (this.pollTimer) {
       clearInterval(this.pollTimer);
+    }
+    if (this.subscriptionRestartTimer) {
+      clearTimeout(this.subscriptionRestartTimer);
+      this.subscriptionRestartTimer = null;
     }
     if (this.wsClient) {
       this.wsClient.dispose();
@@ -357,8 +367,21 @@ class SoundtrackInstance extends InstanceBase {
     this.setVariableValues(variableVals);
   }
 
+  /**
+   * Start the GraphQL subscription for real-time playback updates.
+   * If the subscription ends for any reason (network drop, server close, error),
+   * it automatically schedules a restart after 5 seconds, as long as the
+   * WebSocket client is still active. Any previously pending restart timer is
+   * cancelled before starting to prevent duplicate concurrent subscriptions.
+   */
   startPlaybackSubscription() {
     if (!this.wsClient) return;
+
+    // Cancel any pending restart to avoid duplicate concurrent subscriptions
+    if (this.subscriptionRestartTimer) {
+      clearTimeout(this.subscriptionRestartTimer);
+      this.subscriptionRestartTimer = null;
+    }
 
     const runSubscription = async () => {
       try {
@@ -857,7 +880,10 @@ class SoundtrackInstance extends InstanceBase {
       // Subscription ended - restart if wsClient is still active
       if (this.wsClient) {
         this.log("debug", "Playback subscription ended, restarting...");
-        setTimeout(() => this.startPlaybackSubscription(), 5000);
+        this.subscriptionRestartTimer = setTimeout(
+          () => this.startPlaybackSubscription(),
+          5000
+        );
       }
     };
 
