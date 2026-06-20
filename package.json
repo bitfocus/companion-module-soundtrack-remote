@@ -17,7 +17,7 @@
 		"graphql": "^16.8.1",
 		"graphql-request": "^5.0.0",
 		"graphql-ws": "^5.16.0",
-		"ws": "^7.4.0"
+		"ws": "^7.5.11"
 	},
 	"devDependencies": {
 		"@companion-module/tools": "^2.6.1",
