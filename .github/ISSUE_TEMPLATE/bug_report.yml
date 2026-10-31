@@ -2,14 +2,14 @@ name: Bug report
 description: Create a bug report to help us improve.
 labels:
   - BUG
-title: '[BUG] '
+title: '[BUG]'
 body:
   - type: checkboxes
     attributes:
-      label: Make sure you're on the latest stable or beta build of both Companion and the module
-      description: Bugs are usually fixed in the beta builds before being put into a stable release. Make sure to test your bug in the latest stable or beta build, in case it has already been fixed.
+      label: Make sure you have updated to the latest version of the module
+      description: This may be a beta version of the module, or may require you to update your companion.
       options:
-        - label: I have tested this on the latest stable or beta release
+        - label: I have checked this on the latest version of the module
           required: true
   - type: checkboxes
     attributes:
@@ -51,9 +51,9 @@ body:
           - **Companion Version**: 2.2.0-b177f8fb-3722
           - **Module Version**: 1.0.0
       value: |
-        - OS: 
-        - Browser: 
-        - Companion Version: 
+        - OS:
+        - Browser:
+        - Companion Version:
         - Module Version:
       render: markdown
     validations:
