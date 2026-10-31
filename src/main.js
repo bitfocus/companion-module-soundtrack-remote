@@ -83,6 +83,7 @@ class SoundtrackInstance extends InstanceBase {
 		this.libraryError = null
 		this.wsConnected = false
 		this.restartPending = false
+		this.playbackIterator = null
 		this.resetPlaybackState()
 	}
 
@@ -149,6 +150,10 @@ class SoundtrackInstance extends InstanceBase {
 			// Ping the server so a silently dropped connection is noticed and re-established
 			keepAlive: keepAliveMs,
 			retryAttempts: Infinity,
+			// graphql-ws retries close events (but not network errors) by default and deliberately retries
+			// 4403 Forbidden; treat a refused key as fatal so the status says so and the restart takes over
+			shouldRetry: (event) =>
+				typeof event === 'object' && event !== null && 'code' in event && 'reason' in event && event.code !== 4403,
 			retryWait: async (retries) => {
 				const delay = Math.min(1000 * 2 ** retries, maxRetryDelayMs) + Math.random() * 1000
 				await new Promise((resolve) => setTimeout(resolve, delay))
@@ -190,8 +195,8 @@ class SoundtrackInstance extends InstanceBase {
 		})
 		wsClient.on('error', (error) => {
 			if (this.wsClient !== wsClient) return
+			// A close always follows, and the closed handler reports the reconnect
 			this.log('error', 'WebSocket error: ' + errorMessage(error))
-			this.updateStatus(InstanceStatus.ConnectionFailure, 'Error with WebSocket connection')
 		})
 		wsClient.on('closed', () => {
 			if (this.wsClient !== wsClient) return
@@ -245,6 +250,11 @@ class SoundtrackInstance extends InstanceBase {
 		if (this.wsClient) {
 			const wsClient = this.wsClient
 			this.wsClient = null
+			// End the subscription first; otherwise a client waiting to retry still opens one more socket
+			// (graphql-ws only checks for open subscriptions after its retry wait), and dispose() closes it later
+			const playbackIterator = this.playbackIterator
+			this.playbackIterator = null
+			Promise.resolve(playbackIterator?.return?.()).catch(() => {})
 			// dispose() waits for a pending connection attempt and rejects if that attempt fails
 			Promise.resolve(wsClient.dispose()).catch((error) => {
 				this.log('debug', 'WebSocket dispose: ' + errorMessage(error))
@@ -275,7 +285,8 @@ class SoundtrackInstance extends InstanceBase {
 			this.secrets = secrets
 			// Saving again refreshes the zone dropdown and the library without disturbing a working connection
 			if (this.client) {
-				const zonesLoaded = await this.getZones({ setStatus: false })
+				// With no zone there is no working connection to protect, so report a failed zone list
+				const zonesLoaded = await this.getZones({ setStatus: !this.config.zone_id })
 				if (this.config.zone_id) {
 					await this.getLibrary()
 				} else if (zonesLoaded) {
@@ -429,9 +440,8 @@ class SoundtrackInstance extends InstanceBase {
 				if (this.wsConnected) this.updateStatus(InstanceStatus.Ok)
 			}
 		} catch (error) {
+			// Keep the previous playlists and schedules (a key or zone change already cleared them)
 			this.log('error', 'Error getting library: ' + errorMessage(error))
-			this.playlists = []
-			this.schedules = []
 			// Playback can still work, so warn rather than fail. Only replace an OK status; otherwise the
 			// connected handler shows the warning once the connection is up
 			this.libraryError = 'Could not load playlists and schedules, check the Zone ID'
@@ -488,6 +498,7 @@ class SoundtrackInstance extends InstanceBase {
         }
       }`,
 		})
+		if (this.wsClient === wsClient) this.playbackIterator = playbackSubscription
 		for await (const result of playbackSubscription) {
 			if (this.wsClient !== wsClient) break
 			if (result?.errors?.length) {
