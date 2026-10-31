@@ -1,4 +1,5 @@
 {
+	"$schema": "../node_modules/@companion-module/base/assets/manifest.schema.json",
 	"id": "soundtrack-remote",
 	"name": "soundtrack-remote",
 	"shortname": "soundtrack",
@@ -15,10 +16,10 @@
 	],
 	"legacyIds": [],
 	"runtime": {
-		"type": "node18",
+		"type": "node22",
 		"api": "nodejs-ipc",
 		"apiVersion": "0.0.0",
-		"entrypoint": "../main.js"
+		"entrypoint": "../src/main.js"
 	},
 	"manufacturer": "Soundtrack Your Brand",
 	"products": ["Remote"],

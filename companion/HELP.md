@@ -4,17 +4,13 @@
 
 To request an API key from Soundtrack, fill out [this form from their website](https://www.soundtrackyourbrand.com/our-api/apply)
 
-## Getting ID's for Zones and media sources
+## Choosing a Zone
 
-Some of the actions and feedbacks in this module use the ID of a Zone, Playlist, Schedule, or Station. Here's how to get those ID's:
+Enter your API key in the connection config and save it. The module then fills the **Zone ID** dropdown with every zone the API key can access; pick one and save again. You can also type a zone ID by hand: it is the last part of the zone URL on the Soundtrack website, `https://business.soundtrackyourbrand.com/accounts/{{ your_account_id  }}/zones/{{  your_zone_id  }}/player`.
 
-### Zones
+## Getting ID's for media sources
 
-To get the ID for a Zone, go to the Soundtrack website, click on the Zone page, and select the zone you would like to control with Companion. The URL will look something like this:
-
-`https://business.soundtrackyourbrand.com/accounts/{{ your_account_id  }}/zones/{{  your_zone_id  }}/player`
-
-Copy your zone ID from the URL and paste it into the Zone ID field in Companion, and you should be set!
+Playlists, schedules and announcements are available as dropdowns in their actions. The "Assign source by ID" and "Play/Queue Track" actions take an ID instead, and their ID fields accept variables.
 
 ### Playlists, Schedules, and Stations
 
@@ -24,6 +20,7 @@ Playlist or Station: `https://business.soundtrackyourbrand.com/accounts/{{ your_
 Schedule: `https://business.soundtrackyourbrand.com/accounts/{{ your_account_id  }}/your-music/schedules/edit/{{  your_schedule_id  }}`
 
 ## Actions
+
 - Play
 - Pause
 - Skip
@@ -35,6 +32,7 @@ Schedule: `https://business.soundtrackyourbrand.com/accounts/{{ your_account_id 
 - Play/Queue Track by ID
 
 ## Feedbacks
+
 - Change style based on playback state (Offline, Playing, Paused, Unpaired)
 - Change style based on playback mode (Auto, Linear, Shuffle)
 - Change style based on playback source type (Playlist, Schedule, Manually Queued)
@@ -50,6 +48,7 @@ Schedule: `https://business.soundtrackyourbrand.com/accounts/{{ your_account_id 
 ## Variables
 
 ### Playback
+
 - Playback state (Offline, Playing, Paused, Unpaired)
 - Playback Volume (0-16)
 - Playback Progress (s)
@@ -61,7 +60,9 @@ Schedule: `https://business.soundtrackyourbrand.com/accounts/{{ your_account_id 
 - Playback Remaining (hh:mm:ss)
 - Playback Remaining (%)
 - Playback Mode (Auto, Linear, Shuffle)
+
 ### Current Track
+
 - Current Track Start Time (UTC)
 - Current Track ID
 - Current Track Title
@@ -82,7 +83,9 @@ Schedule: `https://business.soundtrackyourbrand.com/accounts/{{ your_account_id 
 - Current Track Source Playlist ID
 - Current Track Source Playlist Title
 - Current Track Source Playlist Description
+
 ### Upcoming Track
+
 - Upcoming Track Start Time (UTC)
 - Upcoming Track ID
 - Upcoming Track Title
