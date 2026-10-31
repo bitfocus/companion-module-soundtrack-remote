@@ -81,6 +81,7 @@ class SoundtrackInstance extends InstanceBase {
 		this.secrets = {}
 		this.initGeneration = 0
 		this.libraryError = null
+		this.wsConnected = false
 		this.resetPlaybackState()
 	}
 
@@ -123,10 +124,10 @@ class SoundtrackInstance extends InstanceBase {
 		if (generation !== this.initGeneration) return
 
 		if (!this.config.zone_id) {
-			this.updateStatus(
-				InstanceStatus.BadConfig,
-				'Zone ID not set. Save config with a valid API key to populate list of zones.',
-			)
+			// A failed zone list already reported "check the API key"; keep that rather than blaming the zone
+			if (zonesLoaded) {
+				this.updateStatus(InstanceStatus.BadConfig, 'Zone ID not set. Pick a zone in the connection config.')
+			}
 			return
 		}
 
@@ -179,6 +180,7 @@ class SoundtrackInstance extends InstanceBase {
 		wsClient.on('connected', () => {
 			if (this.wsClient !== wsClient) return
 			this.log('debug', 'WebSocket connected')
+			this.wsConnected = true
 			if (this.libraryError) {
 				this.updateStatus(InstanceStatus.UnknownWarning, this.libraryError)
 			} else {
@@ -193,7 +195,9 @@ class SoundtrackInstance extends InstanceBase {
 		wsClient.on('closed', () => {
 			if (this.wsClient !== wsClient) return
 			this.log('debug', 'WebSocket connection closed')
-			this.updateStatus(InstanceStatus.Disconnected, 'WebSocket connection closed')
+			this.wsConnected = false
+			// graphql-ws waits before reconnecting, so show that a reconnect is coming
+			this.updateStatus(InstanceStatus.Connecting, 'Reconnecting')
 		})
 
 		this.runPlaybackSubscription(wsClient).then(
@@ -231,6 +235,7 @@ class SoundtrackInstance extends InstanceBase {
 		clearTimeout(this.restartTimer)
 		clearTimeout(this.pongTimer)
 		this.stopProgressTimer()
+		this.wsConnected = false
 		if (this.wsClient) {
 			const wsClient = this.wsClient
 			this.wsClient = null
@@ -262,8 +267,11 @@ class SoundtrackInstance extends InstanceBase {
 		} else {
 			this.config = config
 			this.secrets = secrets
-			// Saving again refreshes the zone dropdown, as the config help text promises
-			if (this.client) await this.getZones()
+			// Saving again refreshes the zone dropdown and the library without disturbing a working connection
+			if (this.client) {
+				await this.getZones({ setStatus: false })
+				if (this.config.zone_id) await this.getLibrary()
+			}
 		}
 	}
 
@@ -275,9 +283,11 @@ class SoundtrackInstance extends InstanceBase {
 				id: 'info',
 				label: 'Configuration Information',
 				width: 12,
-				value: `This module requires an API key from Soundtrack Your Brand; see the module help for how to request one.
-					Enter your API key below and save the configuration, leaving Zone ID blank.
-					The Zone ID dropdown then lists the zones available to the API key. Pick one and save again.`,
+				value: [
+					'This module requires an API key from Soundtrack Your Brand; see the module help for how to request one.',
+					'Enter your API key below and save the configuration, leaving Zone ID blank.',
+					'The Zone ID dropdown then lists the zones available to the API key. Pick one and save again.',
+				].join(' '),
 			},
 			{
 				type: 'secret-text',
@@ -323,7 +333,7 @@ class SoundtrackInstance extends InstanceBase {
 		}${remainingSeconds}`
 	}
 
-	async getZones() {
+	async getZones({ setStatus = true } = {}) {
 		try {
 			const res = await this.request(`
         query {
@@ -356,7 +366,9 @@ class SoundtrackInstance extends InstanceBase {
 		} catch (error) {
 			this.log('error', 'Error getting zones: ' + errorMessage(error))
 			this.zones = []
-			this.updateStatus(InstanceStatus.ConnectionFailure, 'Could not list zones, check the API key')
+			if (setStatus) {
+				this.updateStatus(InstanceStatus.ConnectionFailure, 'Could not list zones, check the API key')
+			}
 			return false
 		}
 	}
@@ -400,13 +412,19 @@ class SoundtrackInstance extends InstanceBase {
 				id: edge.node.id,
 				label: edge.node.name,
 			}))
+			// A reload after an earlier failure clears the warning
+			if (this.libraryError) {
+				this.libraryError = null
+				if (this.wsConnected) this.updateStatus(InstanceStatus.Ok)
+			}
 		} catch (error) {
 			this.log('error', 'Error getting library: ' + errorMessage(error))
 			this.playlists = []
 			this.schedules = []
-			// Playback can still work, so warn rather than fail; the connected handler keeps this visible
+			// Playback can still work, so warn rather than fail. Only replace an OK status; otherwise the
+			// connected handler shows the warning once the connection is up
 			this.libraryError = 'Could not load playlists and schedules, check the Zone ID'
-			this.updateStatus(InstanceStatus.UnknownWarning, this.libraryError)
+			if (this.wsConnected) this.updateStatus(InstanceStatus.UnknownWarning, this.libraryError)
 		}
 
 		this.announcements = []
