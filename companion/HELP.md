@@ -19,6 +19,14 @@ To get the ID for a Playlist, Schedule, or Station, go to the Soundtrack website
 Playlist or Station: `https://business.soundtrackyourbrand.com/accounts/{{ your_account_id  }}/your_music/{{  your_playlist_id  }}`  
 Schedule: `https://business.soundtrackyourbrand.com/accounts/{{ your_account_id  }}/your-music/schedules/edit/{{  your_schedule_id  }}`
 
+## Presets
+
+- **Transport:** Play, Pause, Skip and fixed volume levels, with playback state feedback
+- **Now Playing:** current track, up next, time remaining/elapsed, volume, playback state, current playlist and an explicit-content warning
+- **Playlists / Schedules / Announcements:** one button per item in your library, highlighted while it is playing
+
+The API key is stored as a connection secret, so it is hidden in the UI and left out of exports.
+
 ## Actions
 
 - Play

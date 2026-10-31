@@ -6,6 +6,7 @@ const UpgradeScripts = require('./upgrades')
 const UpdateActions = require('./actions')
 const UpdateVariables = require('./variables')
 const UpdateFeedbacks = require('./feedbacks')
+const UpdatePresets = require('./presets')
 const { gqlString } = require('./util')
 
 const soundtrackHTTPURL = 'https://api.soundtrackyourbrand.com/v2'
@@ -71,6 +72,7 @@ class SoundtrackInstance extends InstanceBase {
 		this.schedules = []
 		this.announcements = []
 		this.supportsAnnouncements = false
+		this.secrets = {}
 		this.resetPlaybackState()
 	}
 
@@ -83,23 +85,26 @@ class SoundtrackInstance extends InstanceBase {
 		this.lastUpdate = new Date()
 	}
 
-	async init(config) {
+	async init(config, _isFirstInit, secrets) {
 		this.config = config
+		this.secrets = secrets ?? {}
 		this.teardown()
 
 		// Register definitions straight away so saved buttons resolve while the library loads
 		this.updateActions()
 		this.updateFeedbacks()
 		this.updateVariables()
+		this.updatePresets()
 
-		if (!this.config.api_key) {
+		const apiKey = this.secrets.api_key
+		if (!apiKey) {
 			this.updateStatus(InstanceStatus.BadConfig, 'API Key not set')
 			return
 		}
 
 		// HTTP GraphQL client for queries and mutations
 		this.client = new GraphQLClient(soundtrackHTTPURL, {
-			headers: { authorization: `Basic ${this.config.api_key}` },
+			headers: { authorization: `Basic ${apiKey}` },
 		})
 
 		// Keep the zone dropdown populated whenever an API key is set
@@ -120,7 +125,7 @@ class SoundtrackInstance extends InstanceBase {
 			url: soundtrackWSURL,
 			webSocketImpl: WebSocket,
 			connectionParams: {
-				Authorization: `Basic ${this.config.api_key}`,
+				Authorization: `Basic ${apiKey}`,
 			},
 		})
 		this.wsClient = wsClient
@@ -167,12 +172,13 @@ class SoundtrackInstance extends InstanceBase {
 		this.teardown()
 	}
 
-	async configUpdated(config) {
-		const apiKeyChanged = config.api_key !== this.config.api_key
+	async configUpdated(config, secrets) {
+		secrets = secrets ?? {}
+		const apiKeyChanged = secrets.api_key !== this.secrets.api_key
 		if (apiKeyChanged && config.zone_id === this.config.zone_id && config.zone_id) {
 			// The old zone most likely belongs to the old key, so ask for a new one
 			config.zone_id = ''
-			this.saveConfig(config)
+			this.saveConfig(config, secrets)
 		}
 		if (apiKeyChanged || config.zone_id !== this.config.zone_id) {
 			this.playlists = []
@@ -180,9 +186,10 @@ class SoundtrackInstance extends InstanceBase {
 			this.announcements = []
 			this.supportsAnnouncements = false
 			this.resetPlaybackState()
-			await this.init(config)
+			await this.init(config, false, secrets)
 		} else {
 			this.config = config
+			this.secrets = secrets
 		}
 	}
 
@@ -200,7 +207,7 @@ class SoundtrackInstance extends InstanceBase {
         This module will then automatically populate the Zone ID dropdown with the zones available to the API key.`,
 			},
 			{
-				type: 'textinput',
+				type: 'secret-text',
 				id: 'api_key',
 				label: 'API Key',
 				width: 12,
@@ -350,6 +357,7 @@ class SoundtrackInstance extends InstanceBase {
 
 		this.updateActions()
 		this.updateFeedbacks()
+		this.updatePresets()
 		this.checkFeedbacks()
 	}
 
@@ -503,6 +511,10 @@ class SoundtrackInstance extends InstanceBase {
 
 	updateFeedbacks() {
 		UpdateFeedbacks(this)
+	}
+
+	updatePresets() {
+		UpdatePresets(this)
 	}
 }
 
