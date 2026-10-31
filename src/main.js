@@ -11,6 +11,10 @@ const { gqlString } = require('./util')
 
 const soundtrackHTTPURL = 'https://api.soundtrackyourbrand.com/v2'
 const soundtrackWSURL = 'wss://api.soundtrackyourbrand.com/v2/graphql-transport-ws'
+const keepAliveMs = 15000
+const pongTimeoutMs = 5000
+const maxRetryDelayMs = 30000
+const restartDelayMs = 60000
 
 // Fields requested for both the current and the upcoming track
 const playableFields = `
@@ -121,15 +125,44 @@ class SoundtrackInstance extends InstanceBase {
 		this.updateStatus(InstanceStatus.Connecting)
 
 		// WebSocket client for subscriptions
+		let activeSocket = null
 		const wsClient = createClient({
 			url: soundtrackWSURL,
 			webSocketImpl: WebSocket,
 			connectionParams: {
 				Authorization: `Basic ${apiKey}`,
 			},
+			// Ping the server so a silently dropped connection is noticed and re-established
+			keepAlive: keepAliveMs,
+			retryAttempts: Infinity,
+			retryWait: async (retries) => {
+				const delay = Math.min(1000 * 2 ** retries, maxRetryDelayMs) + Math.random() * 1000
+				await new Promise((resolve) => setTimeout(resolve, delay))
+			},
+			on: {
+				connected: (socket) => (activeSocket = socket),
+				ping: (received) => {
+					if (received) return
+					clearTimeout(this.pongTimer)
+					this.pongTimer = setTimeout(() => {
+						if (activeSocket?.readyState === WebSocket.OPEN) {
+							this.log('warn', 'No reply from Soundtrack, reconnecting')
+							// 4408 is retried by graphql-ws, which also resubscribes
+							activeSocket.close(4408, 'Pong timeout')
+						}
+					}, pongTimeoutMs)
+				},
+				pong: (received) => {
+					if (received) clearTimeout(this.pongTimer)
+				},
+			},
 		})
 		this.wsClient = wsClient
 
+		wsClient.on('connecting', (isRetry) => {
+			if (this.wsClient !== wsClient || !isRetry) return
+			this.updateStatus(InstanceStatus.Connecting, 'Reconnecting')
+		})
 		wsClient.on('connected', () => {
 			if (this.wsClient !== wsClient) return
 			this.log('debug', 'WebSocket connected')
@@ -146,18 +179,40 @@ class SoundtrackInstance extends InstanceBase {
 			this.updateStatus(InstanceStatus.Disconnected, 'WebSocket connection closed')
 		})
 
-		this.runPlaybackSubscription(wsClient).catch((error) => {
-			if (this.wsClient !== wsClient) return
-			this.log('error', 'Playback subscription ended: ' + errorMessage(error))
-			this.updateStatus(InstanceStatus.ConnectionFailure, 'Playback subscription failed')
-		})
+		this.runPlaybackSubscription(wsClient).then(
+			() => {
+				if (this.wsClient !== wsClient) return
+				this.log('warn', 'Playback subscription completed, restarting')
+				this.scheduleRestart(wsClient)
+			},
+			(error) => {
+				if (this.wsClient !== wsClient) return
+				this.log('error', 'Playback subscription ended: ' + errorMessage(error))
+				this.updateStatus(InstanceStatus.ConnectionFailure, 'Playback subscription failed')
+				this.scheduleRestart(wsClient)
+			},
+		)
 
 		this.getLibrary().catch((error) => {
 			this.log('error', 'Error getting library: ' + errorMessage(error))
 		})
 	}
 
+	// Start over after a fatal subscription error (for example a revoked key) instead of staying dead
+	scheduleRestart(wsClient) {
+		clearTimeout(this.restartTimer)
+		this.restartTimer = setTimeout(() => {
+			if (this.wsClient !== wsClient) return
+			this.log('info', 'Restarting connection')
+			this.init(this.config, false, this.secrets).catch((error) => {
+				this.log('error', 'Restart failed: ' + errorMessage(error))
+			})
+		}, restartDelayMs)
+	}
+
 	teardown() {
+		clearTimeout(this.restartTimer)
+		clearTimeout(this.pongTimer)
 		this.stopProgressTimer()
 		if (this.wsClient) {
 			this.wsClient.dispose()
