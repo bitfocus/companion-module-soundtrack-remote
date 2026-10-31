@@ -1,4 +1,3 @@
-const { Regex } = require('@companion-module/base')
 const { gqlString } = require('./util')
 
 // Resolve any $(...) variables in a text option
@@ -44,8 +43,7 @@ module.exports = function (self) {
 			id: 'sourceTrackIndex',
 			type: 'textinput',
 			label: 'Track Index',
-			tooltip: 'The index of the track to start playing from',
-			regex: Regex.NUMBER,
+			tooltip: 'The index of the track to start playing from (a number or a variable)',
 			default: '0',
 			useVariables: true,
 			isVisibleExpression: '$(options:setTrackIndex)',
@@ -91,8 +89,7 @@ module.exports = function (self) {
 					id: 'volume',
 					label: 'Volume',
 					default: '10',
-					tooltip: 'Volume level from 0 to 16',
-					regex: Regex.NUMBER,
+					tooltip: 'Volume level from 0 to 16 (a number or a variable)',
 					required: true,
 					useVariables: true,
 				},
@@ -204,9 +201,8 @@ module.exports = function (self) {
 				await queueTracks(await parseText(context, event.options.track), event.options.immediate)
 			},
 		},
-	}
-	if (self.supportsAnnouncements) {
-		actions.play_announcement = {
+		// Always defined so saved buttons resolve before the library has loaded
+		play_announcement: {
 			name: 'Play/Queue Announcement',
 			description: 'Play/Queue an announcement in this zone',
 			options: [
@@ -227,9 +223,12 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (event) => {
+				if (!self.supportsAnnouncements) {
+					throw new Error('Announcements are not available for this account')
+				}
 				await queueTracks(event.options.announcement, event.options.immediate)
 			},
-		}
+		},
 	}
 	self.setActionDefinitions(actions)
 }

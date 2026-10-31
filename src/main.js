@@ -59,6 +59,8 @@ const playableFields = `
   }`
 
 function errorMessage(error) {
+	// graphql-ws rejects with an array of GraphQL errors when the server reports one
+	if (Array.isArray(error)) return error.map((e) => e?.message ?? JSON.stringify(e)).join('; ')
 	if (error?.message) return error.message
 	if (error?.reason) return `${error.code ?? ''} ${error.reason}`.trim()
 	if (error?.code) return `WebSocket closed with code ${error.code}`
@@ -77,6 +79,8 @@ class SoundtrackInstance extends InstanceBase {
 		this.announcements = []
 		this.supportsAnnouncements = false
 		this.secrets = {}
+		this.initGeneration = 0
+		this.libraryError = null
 		this.resetPlaybackState()
 	}
 
@@ -93,6 +97,9 @@ class SoundtrackInstance extends InstanceBase {
 		this.config = config
 		this.secrets = secrets ?? {}
 		this.teardown()
+		// A newer init (or destroy) may start while this one is waiting on the network
+		const generation = ++this.initGeneration
+		this.libraryError = null
 
 		// Register definitions straight away so saved buttons resolve while the library loads
 		this.updateActions()
@@ -112,7 +119,8 @@ class SoundtrackInstance extends InstanceBase {
 		})
 
 		// Keep the zone dropdown populated whenever an API key is set
-		await this.getZones()
+		const zonesLoaded = await this.getZones()
+		if (generation !== this.initGeneration) return
 
 		if (!this.config.zone_id) {
 			this.updateStatus(
@@ -120,6 +128,10 @@ class SoundtrackInstance extends InstanceBase {
 				'Zone ID not set. Save config with a valid API key to populate list of zones.',
 			)
 			return
+		}
+
+		if (zonesLoaded && !this.zones.some((zone) => zone.id === this.config.zone_id)) {
+			this.log('warn', `Zone ${this.config.zone_id} is not in the zone list for this API key`)
 		}
 
 		this.updateStatus(InstanceStatus.Connecting)
@@ -142,18 +154,19 @@ class SoundtrackInstance extends InstanceBase {
 			on: {
 				connected: (socket) => (activeSocket = socket),
 				ping: (received) => {
-					if (received) return
+					if (received || this.wsClient !== wsClient) return
 					clearTimeout(this.pongTimer)
 					this.pongTimer = setTimeout(() => {
 						if (activeSocket?.readyState === WebSocket.OPEN) {
 							this.log('warn', 'No reply from Soundtrack, reconnecting')
-							// 4408 is retried by graphql-ws, which also resubscribes
-							activeSocket.close(4408, 'Pong timeout')
+							// Drop the dead socket at once instead of waiting for a closing handshake;
+							// graphql-ws retries the abnormal close and resubscribes
+							activeSocket.terminate()
 						}
 					}, pongTimeoutMs)
 				},
 				pong: (received) => {
-					if (received) clearTimeout(this.pongTimer)
+					if (received && this.wsClient === wsClient) clearTimeout(this.pongTimer)
 				},
 			},
 		})
@@ -166,7 +179,11 @@ class SoundtrackInstance extends InstanceBase {
 		wsClient.on('connected', () => {
 			if (this.wsClient !== wsClient) return
 			this.log('debug', 'WebSocket connected')
-			this.updateStatus(InstanceStatus.Ok)
+			if (this.libraryError) {
+				this.updateStatus(InstanceStatus.UnknownWarning, this.libraryError)
+			} else {
+				this.updateStatus(InstanceStatus.Ok)
+			}
 		})
 		wsClient.on('error', (error) => {
 			if (this.wsClient !== wsClient) return
@@ -215,8 +232,12 @@ class SoundtrackInstance extends InstanceBase {
 		clearTimeout(this.pongTimer)
 		this.stopProgressTimer()
 		if (this.wsClient) {
-			this.wsClient.dispose()
+			const wsClient = this.wsClient
 			this.wsClient = null
+			// dispose() waits for a pending connection attempt and rejects if that attempt fails
+			Promise.resolve(wsClient.dispose()).catch((error) => {
+				this.log('debug', 'WebSocket dispose: ' + errorMessage(error))
+			})
 		}
 		this.client = null
 	}
@@ -224,17 +245,13 @@ class SoundtrackInstance extends InstanceBase {
 	// When module gets deleted
 	async destroy() {
 		this.log('debug', 'destroy')
+		this.initGeneration++
 		this.teardown()
 	}
 
 	async configUpdated(config, secrets) {
 		secrets = secrets ?? {}
 		const apiKeyChanged = secrets.api_key !== this.secrets.api_key
-		if (apiKeyChanged && config.zone_id === this.config.zone_id && config.zone_id) {
-			// The old zone most likely belongs to the old key, so ask for a new one
-			config.zone_id = ''
-			this.saveConfig(config, secrets)
-		}
 		if (apiKeyChanged || config.zone_id !== this.config.zone_id) {
 			this.playlists = []
 			this.schedules = []
@@ -245,6 +262,8 @@ class SoundtrackInstance extends InstanceBase {
 		} else {
 			this.config = config
 			this.secrets = secrets
+			// Saving again refreshes the zone dropdown, as the config help text promises
+			if (this.client) await this.getZones()
 		}
 	}
 
@@ -334,10 +353,12 @@ class SoundtrackInstance extends InstanceBase {
 					this.zones.push({ id: zone.node.id, label: zone.node.name })
 				}
 			}
+			return true
 		} catch (error) {
 			this.log('error', 'Error getting zones: ' + errorMessage(error))
 			this.zones = []
 			this.updateStatus(InstanceStatus.ConnectionFailure, 'Could not list zones, check the API key')
+			return false
 		}
 	}
 
@@ -384,7 +405,9 @@ class SoundtrackInstance extends InstanceBase {
 			this.log('error', 'Error getting library: ' + errorMessage(error))
 			this.playlists = []
 			this.schedules = []
-			this.updateStatus(InstanceStatus.ConnectionFailure, 'Could not load library, check the Zone ID')
+			// Playback can still work, so warn rather than fail; the connected handler keeps this visible
+			this.libraryError = 'Could not load playlists and schedules, check the Zone ID'
+			this.updateStatus(InstanceStatus.UnknownWarning, this.libraryError)
 		}
 
 		this.announcements = []
