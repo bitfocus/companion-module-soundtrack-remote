@@ -14,13 +14,13 @@ If you change the API key, the selected zone is kept. If that zone is not availa
 
 ## Connection status
 
-| Status                    | Meaning                                                                                                                                                                                                                                              |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| OK                        | Connected and receiving live playback updates                                                                                                                                                                                                        |
-| Connecting / Reconnecting | Connecting, or the connection dropped and the module is reconnecting on its own (it waits up to about 30 seconds between attempts)                                                                                                                   |
-| Bad configuration         | The API key is not set, or the zone is not set                                                                                                                                                                                                       |
-| Warning                   | Playback works, but the playlists and schedules could not be loaded. Check the Zone ID, then save the config to try again                                                                                                                            |
-| Connection failure        | "Could not list zones": the API key was rejected or Soundtrack could not be reached; check the key. "Error with WebSocket connection": the module keeps reconnecting on its own. "Playback subscription failed": the module tries again every minute |
+| Status                    | Meaning                                                                                                                                                                                                                                                    |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OK                        | Connected and receiving live playback updates                                                                                                                                                                                                              |
+| Connecting / Reconnecting | Connecting, or the connection dropped and the module is reconnecting on its own (it waits up to about 30 seconds between attempts). "Playback updates stopped, restarting in a minute" means Soundtrack ended the update stream and the module restarts it |
+| Bad configuration         | The API key is not set, or the zone is not set                                                                                                                                                                                                             |
+| Warning                   | Playback works, but the playlists and schedules could not be loaded. Check the Zone ID, then save the config to try again                                                                                                                                  |
+| Connection failure        | "Could not list zones": the API key was rejected or Soundtrack could not be reached; check the key. "Playback subscription failed": the API key or Zone ID was rejected; the module tries again every minute                                               |
 
 ## Actions
 

@@ -82,6 +82,7 @@ class SoundtrackInstance extends InstanceBase {
 		this.initGeneration = 0
 		this.libraryError = null
 		this.wsConnected = false
+		this.restartPending = false
 		this.resetPlaybackState()
 	}
 
@@ -196,7 +197,9 @@ class SoundtrackInstance extends InstanceBase {
 			if (this.wsClient !== wsClient) return
 			this.log('debug', 'WebSocket connection closed')
 			this.wsConnected = false
-			// graphql-ws waits before reconnecting, so show that a reconnect is coming
+			// After the subscription has ended graphql-ws does not reconnect; keep the status the module set
+			if (this.restartPending) return
+			// Otherwise graphql-ws waits before reconnecting, so show that a reconnect is coming
 			this.updateStatus(InstanceStatus.Connecting, 'Reconnecting')
 		})
 
@@ -204,6 +207,7 @@ class SoundtrackInstance extends InstanceBase {
 			() => {
 				if (this.wsClient !== wsClient) return
 				this.log('warn', 'Playback subscription completed, restarting')
+				this.updateStatus(InstanceStatus.Connecting, 'Playback updates stopped, restarting in a minute')
 				this.scheduleRestart(wsClient)
 			},
 			(error) => {
@@ -221,6 +225,7 @@ class SoundtrackInstance extends InstanceBase {
 
 	// Start over after a fatal subscription error (for example a revoked key) instead of staying dead
 	scheduleRestart(wsClient) {
+		this.restartPending = true
 		clearTimeout(this.restartTimer)
 		this.restartTimer = setTimeout(() => {
 			if (this.wsClient !== wsClient) return
@@ -236,6 +241,7 @@ class SoundtrackInstance extends InstanceBase {
 		clearTimeout(this.pongTimer)
 		this.stopProgressTimer()
 		this.wsConnected = false
+		this.restartPending = false
 		if (this.wsClient) {
 			const wsClient = this.wsClient
 			this.wsClient = null
@@ -269,8 +275,13 @@ class SoundtrackInstance extends InstanceBase {
 			this.secrets = secrets
 			// Saving again refreshes the zone dropdown and the library without disturbing a working connection
 			if (this.client) {
-				await this.getZones({ setStatus: false })
-				if (this.config.zone_id) await this.getLibrary()
+				const zonesLoaded = await this.getZones({ setStatus: false })
+				if (this.config.zone_id) {
+					await this.getLibrary()
+				} else if (zonesLoaded) {
+					// Replace an earlier "check the API key" now that the zones have loaded
+					this.updateStatus(InstanceStatus.BadConfig, 'Zone ID not set. Pick a zone in the connection config.')
+				}
 			}
 		}
 	}
@@ -427,8 +438,7 @@ class SoundtrackInstance extends InstanceBase {
 			if (this.wsConnected) this.updateStatus(InstanceStatus.UnknownWarning, this.libraryError)
 		}
 
-		this.announcements = []
-		this.supportsAnnouncements = false
+		// A failed query keeps the previous announcements so saved buttons keep working
 		if (accountID) {
 			try {
 				// get account announcements
@@ -446,7 +456,7 @@ class SoundtrackInstance extends InstanceBase {
 				}))
 				this.supportsAnnouncements = true
 			} catch (error) {
-				this.log('debug', 'Account does not support announcements: ' + errorMessage(error))
+				this.log('info', 'Announcements not loaded (unsupported account or request failed): ' + errorMessage(error))
 			}
 		}
 

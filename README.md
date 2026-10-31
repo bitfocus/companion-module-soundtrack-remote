@@ -10,6 +10,7 @@ Controls Soundtrack Your Brand via [their API](https://studio.apollographql.com/
 - Stores the API key as a connection secret (existing keys are migrated automatically)
 - Detects a dropped connection and reconnects on its own; shows Connecting, Warning and failure statuses
 - Lists zones from every account on the API key and keeps the zone when the key changes
+- Saving the config, even without changes, reloads the zone list, playlists, schedules and announcements
 - Fixes crashes when the subscription or library fetch fails, schedule feedbacks, the Play/Queue Announcement action, and variables in action fields
 - Runs on Node 22 and follows the current module template
 
