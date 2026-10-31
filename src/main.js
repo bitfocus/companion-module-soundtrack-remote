@@ -275,10 +275,9 @@ class SoundtrackInstance extends InstanceBase {
 				id: 'info',
 				label: 'Configuration Information',
 				width: 12,
-				value: `This module requires an API key from Soundtrack Your Brand. You can find your API key in the Soundtrack Your Brand web interface under Settings > API Keys.
-
-        Enter your API key below and save the configuration, leaving Zone ID blank.
-        This module will then automatically populate the Zone ID dropdown with the zones available to the API key.`,
+				value: `This module requires an API key from Soundtrack Your Brand; see the module help for how to request one.
+					Enter your API key below and save the configuration, leaving Zone ID blank.
+					The Zone ID dropdown then lists the zones available to the API key. Pick one and save again.`,
 			},
 			{
 				type: 'secret-text',
