@@ -4,6 +4,13 @@ See [HELP.md](./HELP.md) and [LICENSE](./LICENSE)
 
 Controls Soundtrack Your Brand via [their API](https://studio.apollographql.com/public/soundtrack/)
 
+**V2.2.0**
+
+- Adds presets for transport, now-playing displays, playlists, schedules and announcements
+- Stores the API key as a connection secret (existing keys are migrated automatically)
+- Fixes crashes when the subscription or library fetch fails, schedule feedbacks, the Play/Queue Announcement action, and variables in action fields
+- Requires Node 22 (Companion 4.1+) and follows the current module template
+
 **V2.1.0**
 
 - Adds variable support in text and number fields
