@@ -1,12 +1,25 @@
 # companion-module-soundtrack-remote
-See [HELP.md](./HELP.md) and [LICENSE](./LICENSE)
+
+See [HELP.md](./companion/HELP.md) and [LICENSE](./LICENSE)
 
 Controls Soundtrack Your Brand via [their API](https://studio.apollographql.com/public/soundtrack/)
 
+**V2.2.0**
+
+- Adds presets for transport, now-playing displays, playlists, schedules and announcements
+- Stores the API key as a connection secret (existing keys are migrated automatically)
+- Detects a dropped connection and reconnects on its own; shows Connecting, Warning and failure statuses
+- Lists zones from every account on the API key and keeps the zone when the key changes
+- Saving the config, even without changes, reloads the zone list, playlists, schedules and announcements
+- Fixes crashes when the subscription or library fetch fails, schedule feedbacks, the Play/Queue Announcement action, and variables in action fields
+- Runs on Node 22 and follows the current module template
+
 **V2.1.0**
+
 - Adds variable support in text and number fields
 
 **V2.0.0**
+
 - Adds subscription to Soundtrack API for real-time updates
 - Now downloads a user's zones, playlists, schedules, and stations for easier selection
 - Adds support for actions:
